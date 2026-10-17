@@ -33,8 +33,22 @@ log() { printf '%s\n' "$*" | tee -a "$RUN"; }
 
 fetch_code() {
   local url="$1"; local out="$2"; local timeout="${3:-25}"; local code
-  code="$(curl -sS --compressed --retry 2 --retry-delay 2 --max-time "$timeout" -A "$UA" -H "Referer: $BASE/" -H "X-Requested-With: XMLHttpRequest" -o "$out" -w '%{http_code}' "$url" 2>>"$DIAG")" || true
-  [ -z "$code" ] && code="000"
+  local retries=3
+  local wait_time=30
+
+  while [ $retries -gt 0 ]; do
+    code="$(curl -sS --compressed --retry 0 --max-time "$timeout" -A "$UA" -H "Referer: $BASE/" -H "X-Requested-With: XMLHttpRequest" -o "$out" -w '%{http_code}' "$url" 2>>"$DIAG")" || true
+    [ -z "$code" ] && code="000"
+
+    if [ "$code" = "429" ] || [ "$code" = "403" ] || [ "$code" = "503" ]; then
+      echo "Rate limit detectado ($code). Aguardando ${wait_time}s..." >> "$DIAG"
+      sleep $wait_time
+      retries=$((retries - 1))
+      wait_time=$((wait_time * 2))
+    else
+      break
+    fi
+  done
   printf '%s' "$code"
 }
 
