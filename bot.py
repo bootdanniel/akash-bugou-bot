@@ -59,6 +59,14 @@ def enviar_json_cloudflare(dados):
 # ================= O CÉREBRO DO BOT =================
 def executar_ciclo(manual=False, recuperar=False):
     if manual: tg("🔄 <b>Atualização iniciada...</b>")
+    try:
+        r_site = requests.get(BASE, headers=HEADERS, timeout=15)
+        if r_site.status_code != 200:
+            tg(f"❌ <b>O site bloqueou o Akash!</b>\nStatus HTTP: {r_site.status_code}\nO robô não consegue baixar as séries novas daqui.")
+            return
+    except Exception as e:
+        tg(f"❌ <b>Erro de rede no Akash:</b>\n{e}")
+        return
     
     # 1. Pega o que já temos na nuvem
     catalogo_atual = baixar_json_cloudflare()
