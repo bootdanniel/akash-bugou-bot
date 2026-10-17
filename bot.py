@@ -1,159 +1,149 @@
-import os, json, time, random, html, threading, subprocess
-from datetime import datetime, timezone
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import os
+import json
+import time
+import random
+import threading
 import requests
+from datetime import datetime, timezone
 
+# ================= CONFIGURAÇÕES =================
 TG_TOKEN = os.environ.get("TG_TOKEN", "")
 TG_CHAT_ID = os.environ.get("TG_CHAT_ID", "")
 CF_TOKEN = os.environ.get("CF_TOKEN", "")
 CF_ACCOUNT = os.environ.get("CF_ACCOUNT", "")
 CF_KV = os.environ.get("CF_KV", "")
-CF_KEY = os.environ.get("CF_KEY", "catalogo")
-BASE = os.environ.get("BUGOU_BASE", "https://embed.bugoumods.com")
-UA = os.environ.get("BUGOU_UA", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36")
-SCRIPT = os.environ.get("EXTRACT_SCRIPT", "/app/f68b.sh")
-MAPA_JSON = os.environ.get("MAPA_JSON", "/app/mapa_series_live/mapa_series_live.json")
-LOG_FILE = os.environ.get("LOG_FILE", "/app/extracao.log")
-OFFSET_FILE = os.environ.get("OFFSET_FILE", "/app/tg_offset.json")
 
-SKIP_EXTRACT = os.environ.get("SKIP_EXTRACT", "0") == "1"
-MAX_TEST_LINKS = int(os.environ.get("MAX_TEST_LINKS", "80"))
-AUTO_INTERVAL = int(os.environ.get("AUTO_INTERVAL", "3600"))
-EXTRACT_TIMEOUT = int(os.environ.get("EXTRACT_TIMEOUT", "3600"))
-PROXY = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
+BASE = "https://embed.bugoumods.com"
+UA = "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
+HOST_FINAL = "https://teco.bugoumods.com"
+PREFIX_SERIE = "/series/BugouVortex/BugouVortex"
+PREFIX_LIVE = "/live/BugouVortex/BugouVortex"
+DA = "embed.bugoumods.com"
 
-LAST_STATUS = {"updated_at": None, "series": 0, "episodios": 0, "canais": 0, "links_testados": 0, "links_ok": 0, "links_fail": 0, "kv_ok": False, "erro": ""}
+HEADERS = {"User-Agent": UA, "Referer": BASE + "/", "X-Requested-With": "XMLHttpRequest"}
+ULTIMO_UPDATE_ID = 0
 
-session = requests.Session()
-if PROXY: session.proxies.update({"http": PROXY, "https": PROXY})
-
-def now_str(): return datetime.now(timezone.utc).strftime("%H:%M:%S")
-def iso_now(): return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
+# ================= FUNÇÕES BÁSICAS =================
 def tg(msg):
     if not TG_TOKEN or not TG_CHAT_ID: return
-    msg = str(msg)
-    for chunk in [msg[i:i + 3900] for i in range(0, len(msg), 3900)]:
-        try: session.post(f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage", data={"chat_id": TG_CHAT_ID, "text": chunk, "parse_mode": "HTML", "disable_web_page_preview": "true"}, timeout=15)
+    for chunk in [str(msg)[i:i+3900] for i in range(0, len(str(msg)), 3900)]:
+        try:
+            requests.post(f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage", 
+                          json={"chat_id": TG_CHAT_ID, "text": chunk, "parse_mode": "HTML"}, timeout=10)
         except: pass
 
-def tail_file(path, max_chars=1800):
+def fetch_json(url):
     try:
-        with open(path, "rb") as f:
-            f.seek(0, 2); size = f.tell(); f.seek(max(0, size - 30000))
-            return f.read().decode("utf-8", "replace")[-max_chars:]
-    except: return ""
+        r = requests.get(url, headers=HEADERS, timeout=20)
+        if r.status_code == 200: return r.json()
+    except: pass
+    return None
 
-def escape(text): return html.escape(str(text or ""))
-def http_headers(extra=None):
-    h = {"User-Agent": UA, "Referer": BASE + "/"}
-    if extra: h.update(extra)
-    return h
-
-def site_check():
+def baixar_json_cloudflare():
+    url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT}/storage/kv/namespaces/{CF_KV}/values/catalogo"
+    headers = {"Authorization": f"Bearer {CF_TOKEN}"}
     try:
-        r = session.get(BASE, headers=http_headers(), timeout=20, allow_redirects=True)
-        body = r.text[:200000]
-        return r.status_code, "ld(" in body, body[:500], ""
-    except Exception as e: return None, False, "", str(e)
+        r = requests.get(url, headers=headers, timeout=15)
+        if r.status_code == 200: return r.json()
+    except: pass
+    return {"canais": [], "series": []}
 
-def run_extraction():
-    if SKIP_EXTRACT: return 0
-    env = os.environ.copy(); env.setdefault("BASE", BASE); env.setdefault("UA", UA)
+def enviar_json_cloudflare(dados):
+    url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT}/storage/kv/namespaces/{CF_KV}/values/catalogo"
+    headers = {"Authorization": f"Bearer {CF_TOKEN}", "Content-Type": "application/json"}
     try:
-        with open(LOG_FILE, "w", encoding="utf-8") as log:
-            p = subprocess.run(["bash", SCRIPT], stdout=log, stderr=subprocess.STDOUT, env=env, timeout=EXTRACT_TIMEOUT)
-        return p.returncode
-    except subprocess.TimeoutExpired: return 124
-    except Exception as e: return 1
+        r = requests.put(url, headers=headers, data=json.dumps(dados), timeout=60)
+        return r.status_code == 200
+    except: return False
 
-def load_mapa():
-    if not os.path.exists(MAPA_JSON): return None, "Arquivo não existe."
-    try:
-        with open(MAPA_JSON, "r", encoding="utf-8") as f: mapa = json.load(f)
-    except Exception as e: return None, f"JSON inválido: {e}"
-    totais = mapa.get("totais", {})
-    series, canais, episodios = int(totais.get("series", 0)), int(totais.get("canais", 0)), int(totais.get("episodios", 0))
-    if series == 0 and canais == 0: return None, "Mapa vazio: series=0 e canais=0."
-    mapa["_series"], mapa["_canais"], mapa["_episodios"] = series, canais, episodios
-    return mapa, ""
+# ================= O CÉREBRO DO BOT =================
+def executar_ciclo(manual=False, recuperar=False):
+    if manual: tg("🔄 <b>Atualização iniciada...</b>")
+    
+    # 1. Pega o que já temos na nuvem
+    catalogo_atual = baixar_json_cloudflare()
+    series_existentes = {s["nome"] for s in catalogo_atual.get("series", [])}
+    canais_existentes = {c["nome"] for c in catalogo_atual.get("canais", [])}
+    
+    # 2. Descobre as categorias
+    html = requests.get(BASE, headers=HEADERS).text
+    import re
+    cats = re.findall(r"ld\(['\"]([^'\"]+)['\"][[:space:]]*,[[:space:]]*['\"]?([0-9]+)['\"]?", html)
+    cats_series = [c[1] for c in cats if "series" in c[0].lower()]
+    cats_live = [c[1] for c in cats if any(x in c[0].lower() for x in ["live", "channel", "canal"])]
 
-def build_compact(mapa):
-    canais = [{"categoria": c.get("categoria", ""), "nome": c.get("nome", ""), "link_final": c.get("link_final")} for c in mapa.get("live", []) if c.get("link_final")]
-    series_map = {}
-    for s in mapa.get("series", []):
-        links = [ep.get("link_final") for ep in s.get("episodios", []) if ep.get("link_final")]
-        if links:
-            nome = s.get("nome", "")
-            if nome not in series_map: series_map[nome] = {"categoria": s.get("categoria", ""), "nome": nome, "links_finais": []}
-            series_map[nome]["links_finais"].extend(links)
-    return {"atualizado_em": iso_now(), "canais": canais, "series": list(series_map.values())}
+    novas_series = []
+    novos_canais = []
+    
+    # 3. Busca apenas o que falta
+    for cat in cats_series:
+        data = fetch_json(f"{BASE}/index.php?ajax=1&type=series&cat={cat}&_t={int(time.time())}000")
+        if not data: continue
+        for s in data if isinstance(data, list) else data.get("series", []):
+            nome = s.get("name", "")
+            if nome in series_existentes and not recuperar: continue
+            
+            info = fetch_json(f"{BASE}/index.php?ajax=1&type=series_info&series_id={s['series_id']}")
+            if not info: continue
+            
+            eps = []
+            for ep_list in info.get("episodes", {}).values():
+                for ep in ep_list:
+                    link = f"{HOST_FINAL}{PREFIX_SERIE}/{ep['id']}.{ep.get('container_extension', 'mp4')}?domain_auth={DA}"
+                    eps.append(link)
+            
+            if eps: novas_series.append({"categoria": s.get("genre", ""), "nome": nome, "links_finais": eps})
+            time.sleep(0.2) # Evita bloqueio
 
-def test_link(item):
-    tipo, nome, cat, url = item
-    try:
-        r = session.get(url, headers=http_headers({"Range": "bytes=0-15"}), timeout=15, stream=True, allow_redirects=True)
-        ct = (r.headers.get("Content-Type") or "").lower()
-        ok = r.status_code in (200, 206) and any(x in ct for x in ("video/", "mpegurl", "mp2t", "octet-stream"))
-        r.close(); return item, ok
-    except: return item, False
+    for cat in cats_live:
+        data = fetch_json(f"{BASE}/index.php?ajax=1&type=live_streams&cat={cat}&_t={int(time.time())}000")
+        if not data: continue
+        for c in data if isinstance(data, list) else data.get("live_streams", []):
+            nome = c.get("name", "")
+            if nome in canais_existentes and not recuperar: continue
+            link = f"{HOST_FINAL}{PREFIX_LIVE}/{c['stream_id']}.m3u8?domain_auth={DA}"
+            novos_canais.append({"categoria": c.get("category_id", ""), "nome": nome, "link_final": link})
+            time.sleep(0.2)
 
-def kv_put(key, payload_bytes):
-    if not CF_TOKEN or not CF_ACCOUNT or not CF_KV: return False, "Credenciais CF ausentes"
-    url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT}/storage/kv/namespaces/{CF_KV}/values/{key}"
-    try:
-        r = session.put(url, data=payload_bytes, headers={"Authorization": f"Bearer {CF_TOKEN}", "Content-Type": "application/json"}, timeout=60)
-        return r.status_code == 200, r.text[:800]
-    except Exception as e: return False, str(e)
+    # 4. Atualiza o JSON final
+    if novas_series or novos_canais:
+        catalogo_atual["series"].extend(novas_series)
+        catalogo_atual["canais"].extend(novos_canais)
+        catalogo_atual["atualizado_em"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        sucesso = enviar_json_cloudflare(catalogo_atual)
+    else:
+        sucesso = True
 
-def ciclo(manual=False):
-    global LAST_STATUS; inicio = time.time()
-    if manual: tg("🔄 <b>Atualização manual iniciada</b>")
-    if not SKIP_EXTRACT:
-        code, has_ld, snippet, err = site_check()
-        if err or code not in (200, 301, 302) or not has_ld:
-            tg(f"❌ <b>Site bloqueou o IP do Akash!</b>\nHTTP: {code} | ld(): {has_ld}\n\n<b>Snippet:</b>\n<pre>{escape(snippet)}</pre>")
-            return
-    if run_extraction() != 0:
-        tg(f"❌ <b>Extração falhou</b>\n<pre>{escape(tail_file(LOG_FILE))}</pre>"); return
-    mapa, erro = load_mapa()
-    if erro:
-        tg(f"❌ <b>Mapa inválido</b>\n{escape(erro)}\nKV não atualizado."); return
-    compact = build_compact(mapa)
-    all_links = [("canal", c["nome"], c["categoria"], c["link_final"]) for c in compact["canais"]] + [("serie", s["nome"], s["categoria"], url) for s in compact["series"] for url in s["links_finais"]]
-    if not all_links:
-        tg("❌ <b>Nenhum link encontrado no mapa.</b> KV não atualizado."); return
-    test_links = random.sample(all_links, min(len(all_links), MAX_TEST_LINKS))
-    ok_count, fail_count = 0, 0
-    with ThreadPoolExecutor(max_workers=20) as ex:
-        for fut in as_completed([ex.submit(test_link, item) for item in test_links]):
-            _, ok = fut.result()
-            if ok: ok_count += 1
-            else: fail_count += 1
-    kv_ok, kv_txt = kv_put(CF_KEY, json.dumps(compact, ensure_ascii=False).encode("utf-8"))
-    dur = round(time.time() - inicio, 1)
-    LAST_STATUS = {"updated_at": iso_now(), "series": mapa.get("_series"), "episodios": mapa.get("_episodios"), "canais": mapa.get("_canais"), "links_testados": len(test_links), "links_ok": ok_count, "links_fail": fail_count, "kv_ok": kv_ok, "erro": ""}
-    msg = f"🔄 <b>Ciclo concluído</b>\n🕐 {now_str()}\n\n• Séries: {mapa.get('_series')}\n• Episódios: {mapa.get('_episodios')}\n• Canais: {mapa.get('_canais')}\n• Amostra testada: {len(test_links)}\n• OK: {ok_count}\n• Falharam: {fail_count}\n• KV: {'✅ Sim' if kv_ok else '❌ Não'}\n• Tempo: {dur}s\n"
-    if not kv_ok: msg += f"\n<b>Erro KV:</b>\n<pre>{escape(kv_txt)}</pre>"
+    # 5. Manda a mensagem de status
+    msg = f"🔄 <b>Ciclo concluído</b>\n🕐 {datetime.now().strftime('%H:%M:%S')}\n\n"
+    msg += f"• Séries: {len(catalogo_atual['series'])}\n• Canais: {len(catalogo_atual['canais'])}\n"
+    msg += f"• Novas/Recuperadas: {len(novas_series) + len(novos_canais)}\n"
+    msg += f"📤 JSON no Worker: {'✅ Sim' if sucesso else '❌ Não'}"
     tg(msg)
 
+# ================= OUVINTE E LOOP =================
 def ouvir_telegram():
-    offset = 0
+    global ULTIMO_UPDATE_ID
     while True:
         try:
-            r = session.get(f"https://api.telegram.org/bot{TG_TOKEN}/getUpdates", params={"offset": offset + 1, "timeout": 30}, timeout=40)
-            for upd in r.json().get("result", []):
-                offset = int(upd.get("update_id", offset))
-                msg = (upd.get("message", {}) or {}).get("text", "").strip()
-                if msg == "/start": tg("🤖 <b>Bot Akash</b>\n/atualizar - roda extração\n/status - mostra estado\n/logs - manda log")
-                elif msg == "/atualizar": threading.Thread(target=ciclo, args=(True,), daemon=True).start()
-                elif msg == "/status": tg(f"📊 <b>Status</b>\nÚltima: {LAST_STATUS.get('updated_at') or 'nunca'}\nSéries: {LAST_STATUS.get('series', 0)}\nCanais: {LAST_STATUS.get('canais', 0)}\nKV: {'✅' if LAST_STATUS.get('kv_ok') else '❌'}")
-                elif msg == "/logs": tg(f"📄 <b>Log</b>\n<pre>{escape(tail_file(LOG_FILE))}</pre>")
+            r = requests.get(f"https://api.telegram.org/bot{TG_TOKEN}/getUpdates?offset={ULTIMO_UPDATE_ID+1}&timeout=30", timeout=40).json()
+            for upd in r.get("result", []):
+                ULTIMO_UPDATE_ID = upd["update_id"]
+                txt = upd.get("message", {}).get("text", "")
+                if txt == "/atualizar": threading.Thread(target=executar_ciclo, args=(True, False)).start()
+                elif txt == "/recuperar": threading.Thread(target=executar_ciclo, args=(True, True)).start()
         except: time.sleep(5)
 
-if __name__ == "__main__":
-    print("🤖 Bot iniciado...")
-    threading.Thread(target=ouvir_telegram, daemon=True).start()
+def loop_automatico():
+    time.sleep(10) # Espera o bot subir
+    tg("🤖 <b>Bot Akash Iniciado!</b>\nFazendo primeira verificação...")
+    executar_ciclo(manual=False, recuperar=False)
+    
     while True:
-        ciclo(manual=False)
-        time.sleep(AUTO_INTERVAL)
+        time.sleep(3600)
+        tg("🔄 <b>Verificação de rotina...</b>")
+        executar_ciclo(manual=False, recuperar=False)
+
+if __name__ == "__main__":
+    threading.Thread(target=ouvir_telegram, daemon=True).start()
+    loop_automatico()
