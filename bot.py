@@ -1,5 +1,5 @@
 import os, json, subprocess, time, requests, threading
-from datetime import datetime
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 
 TG_TOKEN = "8873564641:AAG0X6LEzvNf589NvSh_bt9_3b-Twp-IQz8"
@@ -23,10 +23,23 @@ def testar_link(url):
     return False, url
 
 def rodar_extracao():
-    subprocess.run(["bash", SCRIPT_BASH], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print("🌐 Testando acesso ao site...")
+    try:
+        r = requests.get("https://embed.bugoumods.com/", timeout=10)
+        print(f"✅ Status do site: {r.status_code}")
+    except Exception as e:
+        print(f"❌ Erro de rede ao acessar o site: {e}")
+        
+    print("⚙️ Rodando o script f68_series_live.sh (mostrando erros)...")
+    # Agora não esconde mais os logs! Vai printar tudo no Akash
+    result = subprocess.run(["bash", SCRIPT_BASH], capture_output=True, text=True)
+    if result.stdout:
+        print(f"--- SAÍDA DO SCRIPT ---\n{result.stdout}")
+    if result.stderr:
+        print(f"--- ERROS DO SCRIPT ---\n{result.stderr}")
 
 def ciclo(manual=False):
-    agora = datetime.now().strftime("%H:%M:%S")
+    agora = datetime.now(timezone.utc).strftime("%H:%M:%S")
     if manual: tg("🔄 <b>Atualização Manual Iniciada...</b>\n⏳ Extraindo links do site...")
     try:
         rodar_extracao()
@@ -35,12 +48,12 @@ def ciclo(manual=False):
         return
 
     if not os.path.exists(MAPA_JSON):
-        if manual: tg("❌ <b>Erro</b>\nO JSON não foi gerado.")
+        if manual: tg("❌ <b>Erro</b>\nO JSON não foi gerado pelo script.")
+        print(f"❌ Erro: Arquivo {MAPA_JSON} não encontrado.")
         return
 
     with open(MAPA_JSON, "r", encoding="utf-8") as f: mapa = json.load(f)
 
-    # Prepara a lista de todos os links para testar
     links_para_testar = []
     for c in mapa.get("live", []):
         if c.get("link_final"): links_para_testar.append(("canal", c.get("nome"), c.get("categoria"), c.get("link_final")))
@@ -49,11 +62,11 @@ def ciclo(manual=False):
             if ep.get("link_final"): links_para_testar.append(("serie", s.get("nome"), s.get("categoria"), ep.get("link_final")))
 
     if manual: tg(f"🔍 Testando {len(links_para_testar)} links em paralelo...")
+    print(f"🔍 Testando {len(links_para_testar)} links...")
     
     links_ok = []
     links_falharam = []
     
-    # Testa 30 links por vez
     with ThreadPoolExecutor(max_workers=30) as executor:
         resultados = list(executor.map(lambda x: (x, testar_link(x[3])[0]), links_para_testar))
 
@@ -61,22 +74,18 @@ def ciclo(manual=False):
         if ok: links_ok.append(item)
         else: links_falharam.append(item)
 
-    # Monta o JSON final do Cloudflare
-    novo_json = {"atualizado_em": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), "canais": [], "series": []}
+    novo_json = {"atualizado_em": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "canais": [], "series": []}
     for tipo, nome, cat, url in links_ok:
         if tipo == "canal":
             novo_json["canais"].append({"categoria": cat, "nome": nome, "link_final": url})
         else:
-            # Agrupa episódios da mesma série
             existente = next((item for item in novo_json["series"] if item["nome"] == nome), None)
             if existente: existente["links_finais"].append(url)
             else: novo_json["series"].append({"categoria": cat, "nome": nome, "links_finais": [url]})
 
-    # Envia pro Cloudflare
     r = requests.put(f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT}/storage/kv/namespaces/{CF_KV}/values/catalogo", headers={"Authorization": f"Bearer {CF_TOKEN}"}, data=json.dumps(novo_json), timeout=30)
     sucesso_cf = r.status_code == 200
 
-    # Estatísticas
     total_links = len(links_para_testar)
     ok_count = len(links_ok)
     falha_count = len(links_falharam)
@@ -87,16 +96,17 @@ def ciclo(manual=False):
 
     if manual and links_falharam:
         msg += "⚠️ <b>Links Não Recuperados:</b>\n"
-        for tipo, nome, cat, url in links_falharam[:10]: # Mostra os 10 primeiros para não floodar
+        for tipo, nome, cat, url in links_falharam[:10]:
             msg += f"• {nome} ({cat})\n"
         if falha_count > 10: msg += f"... e mais {falha_count - 10} links.\n"
 
     tg(msg)
+    print("✅ Ciclo concluído.")
 
 def loop_automatico():
     while True:
         ciclo(manual=False)
-        time.sleep(3600) # 1 hora
+        time.sleep(3600)
 
 def ouvir_telegram():
     global ULTIMO_UPDATE
@@ -108,14 +118,11 @@ def ouvir_telegram():
                 msg = update.get("message", {}).get("text", "")
                 if msg.strip() == "/atualizar":
                     tg("🔄 <b>Comando recebido!</b> Iniciando atualização sob demanda...")
-                    # Roda em uma thread separada para não travar o ouvinte
                     threading.Thread(target=ciclo, args=(True,)).start()
         except Exception:
             time.sleep(5)
 
 if __name__ == "__main__":
     print("🤖 Bot Akash iniciado...")
-    # Inicia o ouvinte do Telegram em background
     threading.Thread(target=ouvir_telegram, daemon=True).start()
-    # Inicia o loop de 1 hora na thread principal
     loop_automatico()
