@@ -1,4 +1,4 @@
-import os, json, time, random, threading, requests, cloudscraper, traceback
+import os, json, time, random, threading, requests, cloudscraper, traceback, re
 from datetime import datetime, timezone
 
 # ================= CONFIGURAÇÕES =================
@@ -14,13 +14,11 @@ PREFIX_SERIE = "/series/BugouVortex/BugouVortex"
 PREFIX_LIVE = "/live/BugouVortex/BugouVortex"
 DA = "embed.bugoumods.com"
 
-# O SEGREDO: CloudScraper (burla a Cloudflare)
 scraper = cloudscraper.create_scraper(
     browser={'browser': 'chrome', 'platform': 'android', 'mobile': True}
 )
 scraper.headers.update({"Referer": BASE + "/"})
 
-# Sessão para o Telegram/Cloudflare (sem proxy)
 api_session = requests.Session()
 api_session.trust_env = False
 
@@ -51,44 +49,47 @@ def enviar_json_cloudflare(dados):
 
 def fetch_json(url):
     try:
-        time.sleep(random.uniform(0.5, 1.5)) # Pausa para parecer humano
-        r = scraper.get(url, timeout=20)
+        time.sleep(random.uniform(1.0, 2.0)) # Pausa maior para evitar bloqueio
+        r = scraper.get(url, timeout=30)
         if r.status_code == 200: return r.json()
         print(f"Erro {r.status_code} na URL: {url}")
     except Exception as e:
         print(f"Exceção: {e}")
     return None
 
-def executar_ciclo(manual=False):
-    if manual: tg("🔄 <b>Atualização iniciada (Modo CloudScraper)...</b>")
+def executar_ciclo(manual=False, recuperar=False):
+    if manual: tg("🔄 <b>Atualização iniciada...</b>")
     
-    # 1. Pega o que já temos na nuvem
     catalogo_atual = baixar_json_cloudflare()
     series_existentes = {s["nome"] for s in catalogo_atual.get("series", [])}
     canais_existentes = {c["nome"] for c in catalogo_atual.get("canais", [])}
     
-    # 2. Descobre as categorias (usando cloudscraper)
     try:
-        html = scraper.get(BASE, timeout=20).text
+        r_html = scraper.get(BASE, timeout=30)
+        html = r_html.text
     except Exception as e:
         tg(f"❌ <b>Erro ao acessar o site:</b>\n{e}")
         return
 
-    import re
-    cats = re.findall(r"ld\(['\"]([^'\"]+)['\"][[:space:]]*,[[:space:]]*['\"]?([0-9]+)['\"]?", html)
+    # Regex corrigido e mais seguro
+    cats = re.findall(r"ld\(\s*['\"]([^'\"]+)['\"]\s*,\s*['\"]?(\d+)['\"]?", html)
+    
+    if not cats:
+        tg("⚠️ <b>Nenhuma categoria encontrada no HTML.</b>\nO site pode estar bloqueando ou mudou o layout.")
+        return
+
     cats_series = [c[1] for c in cats if "series" in c[0].lower()]
     cats_live = [c[1] for c in cats if any(x in c[0].lower() for x in ["live", "channel", "canal"])]
 
     novas_series = []
     novos_canais = []
     
-    # 3. Busca apenas o que falta
     for cat in cats_series:
         data = fetch_json(f"{BASE}/index.php?ajax=1&type=series&cat={cat}&_t={int(time.time())}000")
         if not data: continue
         for s in data if isinstance(data, list) else data.get("series", []):
             nome = s.get("name", "")
-            if nome in series_existentes: continue
+            if nome in series_existentes and not recuperar: continue
             
             info = fetch_json(f"{BASE}/index.php?ajax=1&type=series_info&series_id={s['series_id']}")
             if not info: continue
@@ -106,11 +107,10 @@ def executar_ciclo(manual=False):
         if not data: continue
         for c in data if isinstance(data, list) else data.get("live_streams", []):
             nome = c.get("name", "")
-            if nome in canais_existentes: continue
+            if nome in canais_existentes and not recuperar: continue
             link = f"{HOST_FINAL}{PREFIX_LIVE}/{c['stream_id']}.m3u8?domain_auth={DA}"
             novos_canais.append({"categoria": c.get("category_id", ""), "nome": nome, "link_final": link})
 
-    # 4. Atualiza o JSON final
     if novas_series or novos_canais:
         catalogo_atual["series"].extend(novas_series)
         catalogo_atual["canais"].extend(novos_canais)
@@ -119,7 +119,6 @@ def executar_ciclo(manual=False):
     else:
         sucesso = True
 
-    # 5. Manda a mensagem de status
     msg = f"🔄 <b>Ciclo concluído</b>\n🕐 {datetime.now().strftime('%H:%M:%S')}\n\n"
     msg += f"• Séries Totais: {len(catalogo_atual['series'])}\n• Canais Totais: {len(catalogo_atual['canais'])}\n"
     msg += f"• Novas/Recuperadas: {len(novas_series) + len(novos_canais)}\n"
@@ -134,7 +133,10 @@ def ouvir_telegram():
             for upd in r.get("result", []):
                 ULTIMO_UPDATE_ID = upd["update_id"]
                 txt = upd.get("message", {}).get("text", "")
-                if txt == "/atualizar": threading.Thread(target=executar_ciclo, args=(True,)).start()
+                if txt == "/atualizar": 
+                    threading.Thread(target=executar_ciclo, args=(True, False)).start()
+                elif txt == "/recuperar": 
+                    threading.Thread(target=executar_ciclo, args=(True, True)).start()
                 elif txt == "/status":
                     dados = baixar_json_cloudflare()
                     tg(f"📊 <b>Status</b>\nSéries: {len(dados.get('series', []))}\nCanais: {len(dados.get('canais', []))}\nAtualizado: {dados.get('atualizado_em', 'N/A')}")
@@ -143,12 +145,12 @@ def ouvir_telegram():
 
 def loop_automatico():
     time.sleep(10)
-    tg("🤖 <b>Bot Akash Iniciado!</b>\nUsando CloudScraper para burlar bloqueio. Primeira verificação...")
-    executar_ciclo(manual=False)
+    tg("🤖 <b>Bot Akash Iniciado! (v6)</b>\nUsando CloudScraper. Primeira verificação...")
+    executar_ciclo(manual=False, recuperar=False)
     
     while True:
         time.sleep(3600)
-        executar_ciclo(manual=False)
+        executar_ciclo(manual=False, recuperar=False)
 
 def main():
     print("🤖 Bot Akash iniciado (CloudScraper)...", flush=True)
