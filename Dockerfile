@@ -1,25 +1,26 @@
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH=/usr/local/bin:/usr/bin:/bin
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     curl \
     jq \
     ca-certificates \
-    coreutils \
-    grep \
-    sed \
-    procps \
+    tini \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir requests
+# Instala o requests e o cloudscraper
+RUN pip install --no-cache-dir requests cloudscraper
 
 WORKDIR /app
 
-COPY bot.py f68b.sh ./
+COPY bot.py /app/
 
-RUN chmod +x /app/f68b.sh && sed -i 's/\r$//' /app/bot.py /app/f68b.sh
+RUN sed -i 's/\r$//' /app/bot.py
 
-CMD ["python3", "bot.py"]
+ENTRYPOINT ["tini", "--"]
+CMD ["python3", "-u", "/app/bot.py"]
