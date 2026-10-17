@@ -237,7 +237,7 @@ def ciclo(manual=False):
     if manual: tg("🔄 <b>Atualização iniciada (webscraping.ai)</b>")
     
     try:
-        prev = kv_get(CF_KEY) or {}
+        prev = {}
         mapa, novas = build_mapa(prev)
         
         if mapa["totais"]["series"] == 0 and mapa["totais"]["canais"] == 0:
