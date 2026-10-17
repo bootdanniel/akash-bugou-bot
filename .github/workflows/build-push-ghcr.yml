@@ -30,4 +30,4 @@ jobs:
           platforms: linux/amd64
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v3
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v5
