@@ -1,8 +1,7 @@
 FROM alpine:latest
 
-# Instala as dependências
-RUN apk add --no-cache bash curl jq python3 py3-pip && \
-    pip3 install --no-cache-dir requests
+# Instala as dependências (incluindo o requests direto pelo apk)
+RUN apk add --no-cache bash curl jq python3 py3-requests
 
 # Cria a pasta de trabalho
 WORKDIR /app
