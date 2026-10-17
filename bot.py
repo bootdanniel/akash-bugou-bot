@@ -1,5 +1,4 @@
 import os
-import re
 import json
 import time
 import threading
@@ -23,10 +22,16 @@ PREFIX_SERIE = "/series/BugouVortex/BugouVortex"
 PREFIX_LIVE = "/live/BugouVortex/BugouVortex"
 DA = "embed.bugoumods.com"
 
+# ===== CATEGORIAS FIXAS (A IDEIA GENIAL) =====
+# 1253-1309 = cats/series.tsv original + 1487, 1488 = TURCAS
+SERIES_CATS = [str(i) for i in range(1253, 1310)] + ["1487", "1488"]
+
+# 1418-1477 = cats/live.tsv original + 2100000002 = Mega canal
+LIVE_CATS = [str(i) for i in range(1418, 1478)] + ["2100000002"]
+
 HEADERS = {"User-Agent": "Mozilla/5.0 (Linux; Android 13)"}
 sess = requests.Session()
 sess.trust_env = False
-
 ULTIMO_UPDATE_ID = 0
 
 # ================= FUNÇÕES BÁSICAS =================
@@ -59,36 +64,25 @@ def fetch_via_proxy(target_url):
         r = sess.get(url, headers=HEADERS, timeout=30)
         if r.status_code == 200:
             try: return r.json()
-            except: return r.text
+            except: return None # Ignora HTML de erro
     except Exception as e:
-        print(f"Erro no proxy: {e}")
+        pass
     return None
 
 # ================= O CÉREBRO =================
 def executar_ciclo(manual=False):
-    if manual: tg("🔄 <b>Atualização via Cloudflare Worker...</b>")
+    if manual: tg("🔄 <b>Atualização Iniciada via Cloudflare Worker...</b>")
     
-    html = fetch_via_proxy(BASE)
-    if not html or not isinstance(html, str):
-        tg("❌ <b>Erro ao ler o HTML.</b>\nO Worker falhou ou o site bloqueou.")
-        return
-
-    cats = re.findall(r"ld\(\s*['\"]([^'\"]+)['\"]\s*,\s*['\"]?(\d+)['\"]?", html)
-    cats_series = [c[1] for c in cats if "series" in c[0].lower()]
-    cats_live = [c[1] for c in cats if any(x in c[0].lower() for x in ["live", "channel", "canal"])]
-
-    if not cats_series and not cats_live:
-        tg("⚠️ <b>Nenhuma categoria encontrada.</b>\nO Worker não conseguiu o HTML correto.")
-        return
-
     catalogo = baixar_json_cloudflare()
     series_existentes = {s["nome"] for s in catalogo.get("series", [])}
     canais_existentes = {c["nome"] for c in catalogo.get("canais", [])}
     
     novas_series = []
     novos_canais = []
+    seen_streams = set() # Para evitar duplicados no live
     
-    for cat in cats_series:
+    # 1. SÉRIES
+    for cat in SERIES_CATS:
         data = fetch_via_proxy(f"{BASE}/index.php?ajax=1&type=series&cat={cat}&_t={int(time.time())}000")
         if not data or not isinstance(data, list): continue
         for s in data:
@@ -104,19 +98,26 @@ def executar_ciclo(manual=False):
                     link = f"{HOST_FINAL}{PREFIX_SERIE}/{ep['id']}.{ep.get('container_extension', 'mp4')}?domain_auth={DA}"
                     eps.append(link)
             
-            if eps: novas_series.append({"categoria": s.get("genre", ""), "nome": nome, "links_finais": eps})
+            if eps: 
+                novas_series.append({"categoria": s.get("genre", ""), "nome": nome, "links_finais": eps})
+                series_existentes.add(nome)
             time.sleep(0.1)
 
-    for cat in cats_live:
+    # 2. CANAIS AO VIVO
+    for cat in LIVE_CATS:
         data = fetch_via_proxy(f"{BASE}/index.php?ajax=1&type=live_streams&cat={cat}&_t={int(time.time())}000")
         if not data or not isinstance(data, list): continue
         for c in data:
             nome = c.get("name", "")
-            if nome in canais_existentes: continue
-            link = f"{HOST_FINAL}{PREFIX_LIVE}/{c['stream_id']}.m3u8?domain_auth={DA}"
+            sid = str(c.get("stream_id", ""))
+            if nome in canais_existentes or sid in seen_streams: continue
+            link = f"{HOST_FINAL}{PREFIX_LIVE}/{sid}.m3u8?domain_auth={DA}"
             novos_canais.append({"categoria": c.get("category_id", ""), "nome": nome, "link_final": link})
+            canais_existentes.add(nome)
+            seen_streams.add(sid)
             time.sleep(0.1)
 
+    # 3. SALVA NO CLOUDFLARE
     if novas_series or novos_canais:
         catalogo.setdefault("series", []).extend(novas_series)
         catalogo.setdefault("canais", []).extend(novos_canais)
@@ -139,7 +140,7 @@ def ouvir_telegram():
             for upd in r.get("result", []):
                 ULTIMO_UPDATE_ID = upd["update_id"]
                 txt = upd.get("message", {}).get("text", "")
-                if txt == "/atualizar" or txt == "/recuperar": 
+                if txt in ["/atualizar", "/recuperar"]: 
                     threading.Thread(target=executar_ciclo, args=(True,)).start()
                 elif txt == "/status":
                     dados = baixar_json_cloudflare()
@@ -149,14 +150,14 @@ def ouvir_telegram():
 
 def loop_automatico():
     time.sleep(10)
-    tg("🤖 <b>Bot Akash Iniciado! (v11 - Cloudflare Proxy)</b>\nBuscando atualizações...")
+    tg("🤖 <b>Bot Akash Iniciado! (v13 - Definitivo)</b>\nBuscando atualizações...")
     executar_ciclo(manual=False)
     
     while True:
-        time.sleep(3600)
+        time.sleep(3600) # Verifica de hora em hora
         executar_ciclo(manual=False)
 
 if __name__ == "__main__":
-    print("🤖 Bot Akash iniciado (v11)...", flush=True)
+    print("🤖 Bot Akash iniciado (v13)...", flush=True)
     threading.Thread(target=ouvir_telegram, daemon=True).start()
     loop_automatico()
