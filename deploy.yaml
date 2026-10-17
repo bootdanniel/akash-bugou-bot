@@ -1,0 +1,40 @@
+version: "2.0"
+services:
+  bot:
+    image: ghcr.io/bootdanniel/akash-bugou-bot:v3
+    credentials:
+      host: ghcr.io
+      username: bootdanniel
+      password: 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
+    env:
+      - "TG_TOKEN=8873564641:AAG0X6LEzvNf589NvSh_bt9_3b-Twp-IQz8"
+      - "TG_CHAT_ID=8937132507"
+      - "CF_TOKEN=cfut_INympmN4Cf2HVe4R0eFMhzMd8x2IFWYK0zIRLqjr22741237"
+      - "CF_ACCOUNT=91999e708e94f31088fc40d60e089a20"
+      - "CF_KV=504e5f476ade40f1aba5ac319aa9db55"
+    expose:
+      - port: 8080
+        as: 80
+        to:
+          - global: true
+profiles:
+  compute:
+    bot:
+      resources:
+        cpu:
+          units: 1.0
+        memory:
+          size: 1Gi
+        storage:
+          size: 1Gi
+  placement:
+    akash:
+      pricing:
+        bot:
+          denom: uakt
+          amount: 10000
+deployment:
+  bot:
+    akash:
+      profile: bot
+      count: 1
