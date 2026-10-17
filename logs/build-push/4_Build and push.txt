@@ -1,0 +1,257 @@
+﻿2026-10-17T10:30:01.9705189Z ##[group]Run docker/build-push-action@v5
+2026-10-17T10:30:01.9705567Z with:
+2026-10-17T10:30:01.9705807Z   context: .
+2026-10-17T10:30:01.9706066Z   push: true
+2026-10-17T10:30:01.9706374Z   tags: ghcr.io/bootdanniel/akash-bugou-bot:latest
+2026-10-17T10:30:01.9706726Z   load: false
+2026-10-17T10:30:01.9706966Z   no-cache: false
+2026-10-17T10:30:01.9707215Z   pull: false
+2026-10-17T10:30:01.9710102Z   github-token: ***
+2026-10-17T10:30:01.9710392Z env:
+2026-10-17T10:30:01.9710632Z   REGISTRY: ghcr.io
+2026-10-17T10:30:01.9710918Z   IMAGE_NAME: bootdanniel/akash-bugou-bot
+2026-10-17T10:30:01.9711243Z ##[endgroup]
+2026-10-17T10:30:02.2470927Z (node:2096) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-17T10:30:02.2477595Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-17T10:30:02.2481634Z ##[group]GitHub Actions runtime token ACs
+2026-10-17T10:30:02.2499515Z refs/heads/main: read/write
+2026-10-17T10:30:02.2500958Z ##[endgroup]
+2026-10-17T10:30:02.2502380Z ##[group]Docker info
+2026-10-17T10:30:02.2589391Z [command]/usr/bin/docker version
+2026-10-17T10:30:02.2987782Z Client: Docker Engine - Community
+2026-10-17T10:30:02.2989229Z  Version:           28.0.4
+2026-10-17T10:30:02.3010780Z  API version:       1.48
+2026-10-17T10:30:02.3036095Z  Go version:        go1.23.7
+2026-10-17T10:30:02.3069350Z  Git commit:        b8034c0
+2026-10-17T10:30:02.3089106Z  Built:             Tue Mar 25 15:07:16 2025
+2026-10-17T10:30:02.3090214Z  OS/Arch:           linux/amd64
+2026-10-17T10:30:02.3107809Z  Context:           default
+2026-10-17T10:30:02.3108783Z 
+2026-10-17T10:30:02.3109351Z Server: Docker Engine - Community
+2026-10-17T10:30:02.3110102Z  Engine:
+2026-10-17T10:30:02.3110698Z   Version:          28.0.4
+2026-10-17T10:30:02.3111430Z   API version:      1.48 (minimum version 1.24)
+2026-10-17T10:30:02.3112207Z   Go version:       go1.23.7
+2026-10-17T10:30:02.3112890Z   Git commit:       6430e49
+2026-10-17T10:30:02.3113602Z   Built:            Tue Mar 25 15:07:16 2025
+2026-10-17T10:30:02.3114374Z   OS/Arch:          linux/amd64
+2026-10-17T10:30:02.3115082Z   Experimental:     false
+2026-10-17T10:30:02.3115758Z  containerd:
+2026-10-17T10:30:02.3116458Z   Version:          v2.4.1
+2026-10-17T10:30:02.3117244Z   GitCommit:        f2551031d7276a770f65f98c9b52e57e7dad07e8
+2026-10-17T10:30:02.3118059Z  runc:
+2026-10-17T10:30:02.3118879Z   Version:          1.5.2
+2026-10-17T10:30:02.3119576Z   GitCommit:        v1.5.2-0-g29dd3dc2
+2026-10-17T10:30:02.3120282Z  docker-init:
+2026-10-17T10:30:02.3120879Z   Version:          0.19.0
+2026-10-17T10:30:02.3121519Z   GitCommit:        de40ad0
+2026-10-17T10:30:02.3122991Z [command]/usr/bin/docker info
+2026-10-17T10:30:04.3939274Z Client: Docker Engine - Community
+2026-10-17T10:30:04.3949550Z  Version:    28.0.4
+2026-10-17T10:30:04.3950293Z  Context:    default
+2026-10-17T10:30:04.3950820Z  Debug Mode: false
+2026-10-17T10:30:04.3951515Z  Plugins:
+2026-10-17T10:30:04.3953999Z   buildx: Docker Buildx (Docker Inc.)
+2026-10-17T10:30:04.3954756Z     Version:  v0.38.0
+2026-10-17T10:30:04.3955486Z     Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+2026-10-17T10:30:04.3956807Z   compose: Docker Compose (Docker Inc.)
+2026-10-17T10:30:04.3957499Z     Version:  v2.38.2
+2026-10-17T10:30:04.3958203Z     Path:     /usr/libexec/docker/cli-plugins/docker-compose
+2026-10-17T10:30:04.3967956Z 
+2026-10-17T10:30:04.3970263Z Server:
+2026-10-17T10:30:04.3970830Z  Containers: 0
+2026-10-17T10:30:04.3971344Z   Running: 0
+2026-10-17T10:30:04.3971886Z   Paused: 0
+2026-10-17T10:30:04.3972431Z   Stopped: 0
+2026-10-17T10:30:04.3972998Z  Images: 6
+2026-10-17T10:30:04.3973531Z  Server Version: 28.0.4
+2026-10-17T10:30:04.3974182Z  Storage Driver: overlay2
+2026-10-17T10:30:04.3974891Z   Backing Filesystem: extfs
+2026-10-17T10:30:04.3975540Z   Supports d_type: true
+2026-10-17T10:30:04.3976199Z   Using metacopy: false
+2026-10-17T10:30:04.3976849Z   Native Overlay Diff: false
+2026-10-17T10:30:04.3977495Z   userxattr: false
+2026-10-17T10:30:04.3979045Z  Logging Driver: json-file
+2026-10-17T10:30:04.3979859Z  Cgroup Driver: systemd
+2026-10-17T10:30:04.3980516Z  Cgroup Version: 2
+2026-10-17T10:30:04.3981229Z  Plugins:
+2026-10-17T10:30:04.3981852Z   Volume: local
+2026-10-17T10:30:04.3999154Z   Network: bridge host ipvlan macvlan null overlay
+2026-10-17T10:30:04.4004550Z   Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+2026-10-17T10:30:04.4011865Z  Swarm: inactive
+2026-10-17T10:30:04.4012475Z  Runtimes: io.containerd.runc.v2 runc
+2026-10-17T10:30:04.4013135Z  Default Runtime: runc
+2026-10-17T10:30:04.4013697Z  Init Binary: docker-init
+2026-10-17T10:30:04.4014425Z  containerd version: f2551031d7276a770f65f98c9b52e57e7dad07e8
+2026-10-17T10:30:04.4016119Z  runc version: v1.5.2-0-g29dd3dc2
+2026-10-17T10:30:04.4016709Z  init version: de40ad0
+2026-10-17T10:30:04.4017196Z  Security Options:
+2026-10-17T10:30:04.4017660Z   apparmor
+2026-10-17T10:30:04.4018068Z   seccomp
+2026-10-17T10:30:04.4018805Z    Profile: builtin
+2026-10-17T10:30:04.4019318Z   cgroupns
+2026-10-17T10:30:04.4019769Z  Kernel Version: 6.17.0-1022-azure
+2026-10-17T10:30:04.4020368Z  Operating System: Ubuntu 24.04.5 LTS
+2026-10-17T10:30:04.4020964Z  OSType: linux
+2026-10-17T10:30:04.4021444Z  Architecture: x86_64
+2026-10-17T10:30:04.4021928Z  CPUs: 2
+2026-10-17T10:30:04.4022376Z  Total Memory: 7.752GiB
+2026-10-17T10:30:04.4022884Z  Name: runnervm8k3b6
+2026-10-17T10:30:04.4023411Z  ID: 6134b6ae-8eb1-4f62-889e-a360c80bcfbf
+2026-10-17T10:30:04.4024156Z  Docker Root Dir: /var/lib/docker
+2026-10-17T10:30:04.4031721Z  Debug Mode: false
+2026-10-17T10:30:04.4032274Z  Username: githubactions
+2026-10-17T10:30:04.4032807Z  Experimental: false
+2026-10-17T10:30:04.4033333Z  Insecure Registries:
+2026-10-17T10:30:04.4038075Z   ::1/128
+2026-10-17T10:30:04.4039081Z   127.0.0.0/8
+2026-10-17T10:30:04.4042219Z  Live Restore Enabled: false
+2026-10-17T10:30:04.4042758Z 
+2026-10-17T10:30:04.4043622Z ##[endgroup]
+2026-10-17T10:30:04.4045659Z ##[group]Proxy configuration
+2026-10-17T10:30:04.4046340Z No proxy configuration found
+2026-10-17T10:30:04.4047244Z ##[endgroup]
+2026-10-17T10:30:04.5141651Z ##[group]Buildx version
+2026-10-17T10:30:04.5199068Z [command]/usr/bin/docker buildx version
+2026-10-17T10:30:04.5875523Z github.com/docker/buildx v0.38.0 0dbe87f36ed472fe36b6796c3f70b4210a731fc5
+2026-10-17T10:30:04.5909136Z ##[endgroup]
+2026-10-17T10:30:04.5909900Z ##[group]Builder info
+2026-10-17T10:30:04.7364069Z {
+2026-10-17T10:30:04.7364846Z   "nodes": [
+2026-10-17T10:30:04.7365846Z     {
+2026-10-17T10:30:04.7366512Z       "name": "default",
+2026-10-17T10:30:04.7367276Z       "endpoint": "default",
+2026-10-17T10:30:04.7367974Z       "status": "running",
+2026-10-17T10:30:04.7369525Z       "buildkit": "v0.20.2",
+2026-10-17T10:30:04.7370357Z       "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/386",
+2026-10-17T10:30:04.7371232Z       "features": {
+2026-10-17T10:30:04.7372012Z         "Automatically load images to the Docker Engine image store": true,
+2026-10-17T10:30:04.7373025Z         "Cache export": true,
+2026-10-17T10:30:04.7373737Z         "Direct push": true,
+2026-10-17T10:30:04.7374448Z         "Docker exporter": true,
+2026-10-17T10:30:04.7375490Z         "Multi-platform build": true,
+2026-10-17T10:30:04.7376223Z         "OCI exporter": true,
+2026-10-17T10:30:04.7376890Z         "Prefer image digest": true
+2026-10-17T10:30:04.7377562Z       },
+2026-10-17T10:30:04.7378119Z       "labels": {
+2026-10-17T10:30:04.7379744Z         "org.mobyproject.buildkit.worker.moby.host-gateway-ip": "172.17.0.1"
+2026-10-17T10:30:04.7380664Z       }
+2026-10-17T10:30:04.7381181Z     }
+2026-10-17T10:30:04.7381664Z   ],
+2026-10-17T10:30:04.7382269Z   "name": "default",
+2026-10-17T10:30:04.7382894Z   "driver": "docker"
+2026-10-17T10:30:04.7383526Z }
+2026-10-17T10:30:04.7384647Z ##[endgroup]
+2026-10-17T10:30:04.8976748Z [command]/usr/bin/docker buildx build --iidfile /home/runner/work/_temp/docker-actions-toolkit-CvCnYq/build-iidfile-9c71f60d11.txt --tag ghcr.io/bootdanniel/akash-bugou-bot:latest --metadata-file /home/runner/work/_temp/docker-actions-toolkit-CvCnYq/build-metadata-82f7846197.json --push .
+2026-10-17T10:30:05.2496579Z #0 building with "default" instance using docker driver
+2026-10-17T10:30:05.2497511Z 
+2026-10-17T10:30:05.2497966Z #1 [internal] load build definition from Dockerfile
+2026-10-17T10:30:05.2498871Z #1 transferring dockerfile: 408B 0.0s done
+2026-10-17T10:30:05.2499588Z #1 DONE 0.0s
+2026-10-17T10:30:05.2499795Z 
+2026-10-17T10:30:05.2500065Z #2 [auth] library/alpine:pull token for registry-1.docker.io
+2026-10-17T10:30:05.2500616Z #2 DONE 0.0s
+2026-10-17T10:30:05.2500805Z 
+2026-10-17T10:30:05.2501085Z #3 [internal] load metadata for docker.io/library/alpine:latest
+2026-10-17T10:30:05.4766392Z #3 DONE 0.4s
+2026-10-17T10:30:05.6693125Z 
+2026-10-17T10:30:05.6705742Z #4 [internal] load .dockerignore
+2026-10-17T10:30:05.6713006Z #4 transferring context: 2B done
+2026-10-17T10:30:05.6713606Z #4 DONE 0.0s
+2026-10-17T10:30:05.6714168Z 
+2026-10-17T10:30:05.6714470Z #5 [internal] load build context
+2026-10-17T10:30:05.6715369Z #5 transferring context: 16.24kB done
+2026-10-17T10:30:05.6727342Z #5 DONE 0.0s
+2026-10-17T10:30:05.6728062Z 
+2026-10-17T10:30:05.6730523Z #6 [1/6] FROM docker.io/library/alpine:latest@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
+2026-10-17T10:30:05.6731411Z #6 resolve docker.io/library/alpine:latest@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 done
+2026-10-17T10:30:05.6732182Z #6 sha256:d56c381f961d307a21b3ca004cf1e3910f106644aefb1f43e654c8a56c4fd395 1.02kB / 1.02kB done
+2026-10-17T10:30:05.6732837Z #6 sha256:320994c3b997e2ec6433f717f153e108023c5bec8fefa8d76b83451d16d05ea8 611B / 611B done
+2026-10-17T10:30:05.6733482Z #6 sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 9.22kB / 9.22kB done
+2026-10-17T10:30:05.6733944Z #6 DONE 0.0s
+2026-10-17T10:30:05.6734059Z 
+2026-10-17T10:30:05.6734370Z #7 [2/6] RUN apk add --no-cache bash curl jq python3 py3-pip &&     pip3 install --no-cache-dir requests
+2026-10-17T10:30:06.5287873Z #7 1.011 ( 1/31) Installing ncurses-terminfo-base (6.6_p20260516-r0)
+2026-10-17T10:30:06.6320648Z #7 1.019 ( 2/31) Installing libncursesw (6.6_p20260516-r0)
+2026-10-17T10:30:06.6324018Z #7 1.024 ( 3/31) Installing readline (8.3.3-r1)
+2026-10-17T10:30:06.6325021Z #7 1.029 ( 4/31) Installing bash (5.3.9-r1)
+2026-10-17T10:30:06.6326079Z #7 1.048   Executing bash-5.3.9-r1.post-install
+2026-10-17T10:30:06.6327337Z #7 1.055 ( 5/31) Installing brotli-libs (1.2.0-r1)
+2026-10-17T10:30:06.6330356Z #7 1.063 ( 6/31) Installing c-ares (1.34.8-r0)
+2026-10-17T10:30:06.6333712Z #7 1.067 ( 7/31) Installing libunistring (1.4.2-r0)
+2026-10-17T10:30:06.6334710Z #7 1.080 ( 8/31) Installing libidn2 (2.3.8-r0)
+2026-10-17T10:30:06.6335332Z #7 1.085 ( 9/31) Installing nghttp2-libs (1.70.0-r0)
+2026-10-17T10:30:06.6335927Z #7 1.088 (10/31) Installing libpsl (0.21.5-r3)
+2026-10-17T10:30:06.6336487Z #7 1.091 (11/31) Installing zstd-libs (1.5.7-r2)
+2026-10-17T10:30:06.6337045Z #7 1.098 (12/31) Installing libcurl (8.22.0-r0)
+2026-10-17T10:30:06.6337615Z #7 1.105 (13/31) Installing curl (8.22.0-r0)
+2026-10-17T10:30:06.6338172Z #7 1.110 (14/31) Installing oniguruma (6.9.10-r0)
+2026-10-17T10:30:06.6339349Z #7 1.115 (15/31) Installing jq (1.8.2-r0)
+2026-10-17T10:30:06.8465184Z #7 1.121 (16/31) Installing libexpat (2.8.5-r0)
+2026-10-17T10:30:06.8466345Z #7 1.125 (17/31) Installing libbz2 (1.0.8-r6)
+2026-10-17T10:30:06.8489235Z #7 1.128 (18/31) Installing libffi (3.5.2-r1)
+2026-10-17T10:30:06.8490850Z #7 1.130 (19/31) Installing gdbm (1.26-r0)
+2026-10-17T10:30:06.8492918Z #7 1.134 (20/31) Installing xz-libs (5.8.4-r0)
+2026-10-17T10:30:06.8493717Z #7 1.138 (21/31) Installing libgcc (15.2.0-r5)
+2026-10-17T10:30:06.8494442Z #7 1.141 (22/31) Installing libstdc++ (15.2.0-r5)
+2026-10-17T10:30:06.8495148Z #7 1.157 (23/31) Installing mpdecimal (4.0.1-r0)
+2026-10-17T10:30:06.8495870Z #7 1.162 (24/31) Installing libpanelw (6.6_p20260516-r0)
+2026-10-17T10:30:06.8496615Z #7 1.164 (25/31) Installing sqlite-libs (3.53.4-r0)
+2026-10-17T10:30:06.8497565Z #7 1.178 (26/31) Installing python3 (3.14.8-r0)
+2026-10-17T10:30:06.8820475Z #7 1.365 (27/31) Installing python3-pycache-pyc0 (3.14.8-r0)
+2026-10-17T10:30:07.0033212Z #7 1.486 (28/31) Installing pyc (3.14.8-r0)
+2026-10-17T10:30:07.1467289Z #7 1.486 (29/31) Installing py3-pip-pyc (26.1.2-r0)
+2026-10-17T10:30:07.1468268Z #7 1.559 (30/31) Installing python3-pyc (3.14.8-r0)
+2026-10-17T10:30:07.1469426Z #7 1.559 (31/31) Installing py3-pip (26.1.2-r0)
+2026-10-17T10:30:07.1470140Z #7 1.629 Executing busybox-1.37.0-r31.trigger
+2026-10-17T10:30:07.3157586Z #7 1.648 OK: 65.6 MiB in 47 packages
+2026-10-17T10:30:07.5789084Z #7 2.061 error: externally-managed-environment
+2026-10-17T10:30:07.5792945Z #7 2.061 
+2026-10-17T10:30:07.5793732Z #7 2.061 × This environment is externally managed
+2026-10-17T10:30:07.5794303Z #7 2.061 ╰─> 
+2026-10-17T10:30:07.5794881Z #7 2.061     The system-wide python installation should be maintained using the system
+2026-10-17T10:30:07.5795611Z #7 2.061     package manager (apk) only.
+2026-10-17T10:30:07.5796094Z #7 2.061     
+2026-10-17T10:30:07.5796658Z #7 2.061     If the package in question is not packaged already (and hence installable via
+2026-10-17T10:30:07.5797326Z #7 2.061     "apk add py3-somepackage"), please consider installing it inside a virtual
+2026-10-17T10:30:07.5797754Z #7 2.061     environment, e.g.:
+2026-10-17T10:30:07.5797984Z #7 2.061     
+2026-10-17T10:30:07.5798210Z #7 2.061     python3 -m venv /path/to/venv
+2026-10-17T10:30:07.5799003Z #7 2.061     . /path/to/venv/bin/activate
+2026-10-17T10:30:07.5799432Z #7 2.061     pip install mypackage
+2026-10-17T10:30:07.5799798Z #7 2.061     
+2026-10-17T10:30:07.5800126Z #7 2.061     To exit the virtual environment, run:
+2026-10-17T10:30:07.5800564Z #7 2.061     
+2026-10-17T10:30:07.5800836Z #7 2.061     deactivate
+2026-10-17T10:30:07.5801141Z #7 2.061     
+2026-10-17T10:30:07.5801635Z #7 2.061     The virtual environment is not deleted, and can be re-entered by re-sourcing
+2026-10-17T10:30:07.5802343Z #7 2.061     the activate file.
+2026-10-17T10:30:07.5802688Z #7 2.061     
+2026-10-17T10:30:07.5803177Z #7 2.061     To automatically manage virtual environments, consider using pipx (from the
+2026-10-17T10:30:07.5803801Z #7 2.061     pipx package).
+2026-10-17T10:30:07.5804132Z #7 2.061 
+2026-10-17T10:30:07.5805426Z #7 2.061 note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+2026-10-17T10:30:07.5806949Z #7 2.061 hint: See PEP 668 for the detailed specification.
+2026-10-17T10:30:10.2489772Z #7 ERROR: process "/bin/sh -c apk add --no-cache bash curl jq python3 py3-pip &&     pip3 install --no-cache-dir requests" did not complete successfully: exit code: 1
+2026-10-17T10:30:10.2658265Z ------
+2026-10-17T10:30:10.2659718Z  > [2/6] RUN apk add --no-cache bash curl jq python3 py3-pip &&     pip3 install --no-cache-dir requests:
+2026-10-17T10:30:10.2663045Z 2.061     deactivate
+2026-10-17T10:30:10.2671871Z 2.061     
+2026-10-17T10:30:10.2673901Z 2.061     The virtual environment is not deleted, and can be re-entered by re-sourcing
+2026-10-17T10:30:10.2678908Z 2.061     the activate file.
+2026-10-17T10:30:10.2682057Z 2.061     
+2026-10-17T10:30:10.2682883Z 2.061     To automatically manage virtual environments, consider using pipx (from the
+2026-10-17T10:30:10.2685461Z 2.061     pipx package).
+2026-10-17T10:30:10.2686039Z 2.061 
+2026-10-17T10:30:10.2687628Z 2.061 note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+2026-10-17T10:30:10.2689696Z 2.061 hint: See PEP 668 for the detailed specification.
+2026-10-17T10:30:10.2690211Z ------
+2026-10-17T10:30:10.2710194Z Dockerfile:4
+2026-10-17T10:30:10.2726162Z --------------------
+2026-10-17T10:30:10.2730695Z    3 |     # Instala as dependências
+2026-10-17T10:30:10.2731607Z    4 | >>> RUN apk add --no-cache bash curl jq python3 py3-pip && \
+2026-10-17T10:30:10.2732249Z    5 | >>>     pip3 install --no-cache-dir requests
+2026-10-17T10:30:10.2732747Z    6 |     
+2026-10-17T10:30:10.2733054Z --------------------
+2026-10-17T10:30:10.2734284Z ERROR: failed to build: failed to solve: process "/bin/sh -c apk add --no-cache bash curl jq python3 py3-pip &&     pip3 install --no-cache-dir requests" did not complete successfully: exit code: 1
+2026-10-17T10:30:10.2856205Z ##[error]buildx failed with: ERROR: failed to build: failed to solve: process "/bin/sh -c apk add --no-cache bash curl jq python3 py3-pip &&     pip3 install --no-cache-dir requests" did not complete successfully: exit code: 1

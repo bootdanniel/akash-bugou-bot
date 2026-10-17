@@ -1,0 +1,8 @@
+﻿2026-10-17T10:30:10.3260154Z Post job cleanup.
+2026-10-17T10:30:10.6893450Z ##[group]Removing temp folder /home/runner/work/_temp/docker-actions-toolkit-CvCnYq
+2026-10-17T10:30:10.6899671Z (node:2388) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-17T10:30:10.6901430Z ##[endgroup]
+2026-10-17T10:30:10.6902390Z ##[group]Post cache
+2026-10-17T10:30:10.6904059Z State not set
+2026-10-17T10:30:10.6905030Z ##[endgroup]
+2026-10-17T10:30:10.6919699Z (Use `node --trace-deprecation ...` to show where the warning was created)

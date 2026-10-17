@@ -1,0 +1,14 @@
+﻿2026-10-17T10:30:00.9913542Z ##[group]Run docker/login-action@v3
+2026-10-17T10:30:00.9914730Z with:
+2026-10-17T10:30:00.9915808Z   registry: ghcr.io
+2026-10-17T10:30:00.9916826Z   username: bootdanniel
+2026-10-17T10:30:00.9920790Z   password: ***
+2026-10-17T10:30:00.9921867Z   logout: true
+2026-10-17T10:30:00.9922801Z env:
+2026-10-17T10:30:00.9923744Z   REGISTRY: ghcr.io
+2026-10-17T10:30:00.9924886Z   IMAGE_NAME: bootdanniel/akash-bugou-bot
+2026-10-17T10:30:00.9925937Z ##[endgroup]
+2026-10-17T10:30:01.4487622Z (node:2076) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-17T10:30:01.4490672Z Logging into ghcr.io...
+2026-10-17T10:30:01.4754501Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-17T10:30:01.9554600Z Login Succeeded!
